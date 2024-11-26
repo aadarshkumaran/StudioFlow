@@ -1,6 +1,7 @@
 import os
 from random import choice
 
+from flask import Flask, request, jsonify
 import streamlit as st
 import google.generativeai as genai
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -13,38 +14,7 @@ from cc_extractor import get_transcript
 load_dotenv()
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
-def prompts(choice, context):
-    if choice == 1:
-        template = """
-                    I have a youtube video transcript that needs to be made into a youtube title. 
-                    Ensure the title generated from transcript is attractive, short and maintains the context of the video
-                    and is only one sentence. Only send the title.
-                    Here's the transcript:
-                    CONTEXT: \n{context}\n
-                    ANSWER:
-                    """
-        generate(context, template)
-
-    elif choice == 2:
-        template = """
-            I have a youtube video transcript that needs to be made into a youtube description. 
-            Ensure the description generated from transcript is well-structured, accurate, and maintains the context of the video.
-            Here's the transcript:
-            CONTEXT: \n{context}\n
-            ANSWER:
-            """
-        generate(context, template)
-
-    elif choice == 3:
-        template = """
-                    I have a youtube video transcript that needs to be made into youtube tags. 
-                    Ensure the tags generated from transcript are individual words and maintains the context of the video.
-                    Here's the transcript:
-                    CONTEXT: \n{context}\n
-                    ANSWER:
-                    """
-        generate(context, template)
-
+app  = Flask(__name__)
 
 def generate(context, template):
     prompt_template = template
@@ -57,14 +27,63 @@ def generate(context, template):
     chain = load_qa_chain(model, chain_type="stuff", prompt=prompt)
     result = chain.run(input_documents)
 
-    print(result)
+    #stripping spaces and new lines
+    return result.strip()
+
+# Define API route POST request for processing YouTube transcript
+@app.route('/process', methods =["POST"])
+def process():
+    #getting data from the request
+    data = request.json
+    url = data.get('url')
+    choice = data.get('choice')
+
+    #validation of URL
+    if not url or not choice:
+        return jsonify({"error":"Please provide a valid choice"}), 400
+    
+    try:
+        cc = get_transcript(url)
+
+        # Selects the appropriate template
+        if choice == 1:
+            template = """
+                        I have a youtube video transcript that needs to be made into a youtube title. 
+                        Ensure the title generated from transcript is attractive, short and maintains the context of the video
+                        and is only one sentence. Only send the title.
+                        Here's the transcript:
+                        CONTEXT: \n{context}\n
+                        ANSWER:
+                        """
+        elif choice == 2:
+            template = """
+                        I have a youtube video transcript that needs to be made into a youtube description. 
+                        Ensure the description generated from transcript is well-structured, accurate, and maintains the context of the video.
+                        Here's the transcript:
+                        CONTEXT: \n{context}\n
+                        ANSWER:
+                        """
+        elif choice == 3:
+            template = """
+                        I have a youtube video transcript that needs to be made into youtube tags. 
+                        Ensure the tags generated from transcript are individual words and maintain the context of the video.
+                        Here's the transcript:
+                        CONTEXT: \n{context}\n
+                        ANSWER:
+                        """
+        else:
+            return jsonify({"error": "Invalid choice. Must be 1, 2, or 3."}), 400
+        
+        #Generate result
+        result = generate(cc,template)
+        return jsonify({'result':result}),201
+
+    except Exception as e:
+        return jsonify({'error':str(e)}),500
 
 
 def main():
-    url = input("Enter youtube link: ")
-    cc = get_transcript(url)
-    choice = int(input("1. Title\n 2.Description\n 3.Tags\n"))
-    prompts(choice, cc)
+    app.run(debug=True)
 
 
 if __name__ == "__main__":
