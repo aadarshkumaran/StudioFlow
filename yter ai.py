@@ -1,8 +1,5 @@
 import os
-from random import choice
-
 from flask import Flask, request, jsonify
-import streamlit as st
 import google.generativeai as genai
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.prompts import PromptTemplate
@@ -10,12 +7,13 @@ from langchain.chains.question_answering import load_qa_chain
 from langchain.schema import Document  # For LangChain's document processing
 from dotenv import load_dotenv
 from cc_extractor import get_transcript
+from flask_cors import CORS
 
 load_dotenv()
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 app = Flask(__name__)
-
+cors = CORS(app)
 
 def generate(context, template):
     prompt_template = template
@@ -117,8 +115,6 @@ def enhance():
     contentType = data.get('contentType')
     user_prompt = data.get('user_prompt')
 
-    print(text)
-    print(contentType)
 
     if contentType == "title":
         template = """
@@ -152,7 +148,7 @@ def enhance():
 
 
 def main():
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=8080)
 
 
 if __name__ == "__main__":
