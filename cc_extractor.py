@@ -1,5 +1,5 @@
 import re
-from youtube_transcript_api import YouTubeTranscriptApi
+from youtube_transcript_api import YouTubeTranscriptApi,NoTranscriptFound
 
 def get_transcript(youtube_url):
     # extract video ID with regex
@@ -16,10 +16,15 @@ def get_transcript(youtube_url):
             #Store Transcript in the txt file
             #with open(f"{video_id}_transcript.txt","w",encoding="utf-8") as file:
             #   file.write(transcript_text)
-            return transcript_text
+            if not transcript_text.strip() :
+                return False
+            else:
+                return transcript_text
             #return f"Transcripted saved as {video_id}_transcript.txt"
+        except NoTranscriptFound:
+            return False
         except Exception as e:
-            return f"Error fetching transcript: {e}"
+            raise RuntimeError(f"Error fetching transcript: {e}")
     return 'Invalid Youtube URL'
 
 

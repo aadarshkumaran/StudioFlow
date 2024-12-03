@@ -146,6 +146,18 @@ def enhance():
 
     return jsonify({'result': regen}), 201
 
+@app.route('/check', methods=["GET"])
+def check():
+    youtube_url = request.args.get('url')
+    #validation
+    if not youtube_url:
+        return jsonify({"error":"Provide a valid youtube url"}),400
+    try:
+        cc = get_transcript(youtube_url)
+        if cc:
+            return jsonify({"has_transcript":True}),200        
+    except Exception as e:
+        return jsonify({"has_transcript":False}),200
 
 def main():
     app.run(host="0.0.0.0", port=8080)
