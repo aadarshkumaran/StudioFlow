@@ -1,4 +1,6 @@
 import os
+import re
+from youtube_transcript_api import YouTubeTranscriptApi,NoTranscriptFound
 from flask import Flask, request, jsonify
 import google.generativeai as genai
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -6,7 +8,6 @@ from langchain.prompts import PromptTemplate
 from langchain.chains.question_answering import load_qa_chain
 from langchain.schema import Document  # For LangChain's document processing
 from dotenv import load_dotenv
-from cc_extractor import get_transcript
 from flask_cors import CORS
 
 load_dotenv()
@@ -14,6 +15,32 @@ genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 app = Flask(__name__)
 cors = CORS(app)
+
+def get_transcript(youtube_url):
+    # extract video ID with regex
+    video_id_regex = r'(?:v=|\/)([0-9A-Za-z_-]{11}).*'
+    match = re.search(video_id_regex, youtube_url)
+
+    if match:
+        video_id = match.group(1)
+        try:
+            #extract transcript
+            transcript = YouTubeTranscriptApi.get_transcript(video_id)
+            transcript_text = '\n'.join([entry['text'] for entry in transcript])
+
+            #Store Transcript in the txt file
+            #with open(f"{video_id}_transcript.txt","w",encoding="utf-8") as file:
+            #   file.write(transcript_text)
+            if not transcript_text.strip() :
+                return False
+            else:
+                return transcript_text
+            #return f"Transcripted saved as {video_id}_transcript.txt"
+        except NoTranscriptFound:
+            return False
+        except Exception as e:
+            raise RuntimeError(f"Error fetching transcript: {e}")
+    return 'Invalid Youtube URL'
 
 def generate(context, template):
     prompt_template = template
