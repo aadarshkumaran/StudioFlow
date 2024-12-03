@@ -19,9 +19,9 @@ StudioFlow provides a hassle-free YouTubing experience by providing industry-tre
 
 **Technologies used:**
 
-1. **Google's Gemini Pro LLM**: This powerful language model allows Yter to understand complex data and effortlessly create magnificent titles and descriptions.
+1. **Google's Gemini Pro LLM**: This powerful language model allows StudioFlow to understand complex data and create magnificent titles and descriptions effortlessly.
 
-2. **LangChain Framework**: LangChain helps manage complex queries by connecting multiple AI tools, ensuring that Yter can provide accurate information from the video.
+2. **LangChain Framework**: LangChain helps manage complex queries by connecting multiple AI tools, ensuring that StudioFlow can provide accurate information from the video.
 
 
 
