@@ -1,9 +1,9 @@
-# Yter.ai
+# StudioFlow AI
 ## Description
 
 **AI Enhanced YouTube video uploads**
 
-Yter provides a hassle free YouTubing experience by providing industry trending catchy title, description and tags. By combining the power of Google's Gemini Pro LLM, LangChain Framework, and a user-friendly native interface, Yter provides an innovative solution for anyone looking to step up their content creation game.
+StudioFlow provides a hassle-free YouTubing experience by providing industry-trending catchy titles, descriptions, and tags. By combining the power of Google's Gemini Pro LLM, LangChain Framework, and a user-friendly native interface, StudioFlow provides an innovative solution for anyone looking to step up their content creation game.
 
 
 <br>
@@ -12,14 +12,14 @@ Yter provides a hassle free YouTubing experience by providing industry trending 
 
 - **Automatically understands content from the video without having to provide any additional information**
   
-- **Generates title, description and tags natively without having to leave the YouTube Studio site**
+- **Generates title, description, and tags natively without having to leave the YouTube Studio site**
   
-- **Custom styling: Customizes responses in user's own styling**
+- **Custom styling: Customizes responses in user's styling**
 <br>
 
 **Technologies used:**
 
-1. **Google's Gemini Pro LLM**: This powerful language model allows Yter to understand complex data and create magnificent title and description effortlessly.
+1. **Google's Gemini Pro LLM**: This powerful language model allows Yter to understand complex data and effortlessly create magnificent titles and descriptions.
 
 2. **LangChain Framework**: LangChain helps manage complex queries by connecting multiple AI tools, ensuring that Yter can provide accurate information from the video.
 
@@ -31,7 +31,7 @@ Yter provides a hassle free YouTubing experience by providing industry trending 
 
 ### Installation
 
-* Yter.ai chrome extension
+* StudioFlow chrome extension
 
 
 
@@ -47,7 +47,7 @@ Extension:
 
 ## Version History
 * 0.5
-    * Prototpe Release
+    * Prototype Release
 
 ## License
 
