@@ -20,135 +20,6 @@ app = Flask(__name__)
 cors = CORS(app)
 
 
-def get_video_id(video_url):
-    """
-    Extract video ID from the YouTube video URL.
-
-    Args:
-        video_url (str): YouTube video URL
-
-    Returns:
-        str: The video ID extracted from the URL
-    """
-    # More comprehensive video ID extraction
-    # Handle full YouTube URLs, shortened URLs, and embedded URLs
-    patterns = [
-        r'(?:v=|\/)([0-9A-Za-z_-]{11}).*',  # Standard and embed URLs
-        r'youtu\.be/([0-9A-Za-z_-]{11})',  # Shortened URLs
-        r'youtube\.com/embed/([0-9A-Za-z_-]{11})'  # Embed URLs
-    ]
-
-    for pattern in patterns:
-        match = re.search(pattern, video_url)
-        if match:
-            return match.group(1)
-
-    raise ValueError("Invalid YouTube URL. Could not extract video ID.")
-
-
-def get_cc(video_url):
-    """
-    Extract captions from a YouTube video using a more comprehensive approach.
-
-    Args:
-        video_url (str): YouTube video URL
-
-    Returns:
-        str: Extracted captions as plain text
-    """
-    # Comprehensive set of headers to mimic browser request
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5',
-        'Referer': 'https://www.youtube.com/',
-        'DNT': '1',
-        'Connection': 'keep-alive',
-        'Upgrade-Insecure-Requests': '1'
-    }
-
-    # Get the video ID
-    video_id = get_video_id(video_url)
-
-    # Construct the watch page URL
-    watch_url = f'https://www.youtube.com/watch?v={video_id}'
-
-    try:
-        # Send request to YouTube watch page
-        response = requests.get(watch_url, headers=headers)
-        response.raise_for_status()
-
-        # Multiple strategies to find caption tracks
-        caption_strategies = [
-            # Strategy 1: Original regex for caption tracks
-            r'captionTracks":\s*(\[.*?\])',
-            # Strategy 2: Alternative regex pattern
-            r'"captionTracks":(\[.*?\])',
-            # Strategy 3: More lenient search
-            r'captionTracks.*?(\[.*?\])'
-        ]
-
-        captions_match = None
-        for strategy in caption_strategies:
-            captions_match = re.search(strategy, response.text, re.DOTALL)
-            if captions_match:
-                break
-
-        if not captions_match:
-            raise ValueError("No caption tracks found. The video might not have captions.")
-
-        # Parse the captions JSON
-        try:
-            captions_json = json.loads(captions_match.group(1))
-        except json.JSONDecodeError:
-            # If JSON parsing fails, try to clean the string
-            cleaned_json_str = re.sub(r',\s*}', '}', captions_match.group(1))
-            captions_json = json.loads(cleaned_json_str)
-
-        # Prepare to store captions
-        all_captions = []
-
-        # Iterate through available captions
-        for caption_track in captions_json:
-            caption_url = caption_track.get('baseUrl')
-
-            if not caption_url:
-                continue
-
-            try:
-                # Fetch the caption XML
-                caption_response = requests.get(caption_url, headers=headers)
-                caption_response.raise_for_status()
-
-                # Parse XML captions
-                root = ET.fromstring(caption_response.text)
-
-                # Extract caption texts
-                language_captions = []
-                for text_elem in root.findall('text'):
-                    caption_text = text_elem.text.strip() if text_elem.text else ''
-                    if caption_text:
-                        language_captions.append(caption_text)
-
-                # Combine captions for this language
-                if language_captions:
-                    all_captions.append(' '.join(language_captions))
-
-            except (ET.ParseError, requests.RequestException) as caption_error:
-                print(f"Error processing captions: {caption_error}")
-                continue
-
-        # Return combined captions as a single string
-        if not all_captions:
-            raise ValueError("No valid captions could be extracted.")
-
-        return ' '.join(all_captions)
-
-    except Exception as e:
-        print(f"Unexpected error in get_cc: {e}")
-        raise
-
-
 def generate(context, template):
     prompt_template = template
 
@@ -187,13 +58,15 @@ def process():
     data = request.json
     url = data.get('url')
     choice = data.get('choice')
+    cc = data.get('cc')
+    print(cc, url, choice)
 
     # validation of URL
     if not url or not choice:
         return jsonify({"error": "Please provide a valid choice"}), 400
 
     try:
-        cc = get_cc(video_url=url)
+        #cc = get_cc(video_url=url)
 
         # Selects the appropriate template
         if choice == 1:
@@ -241,11 +114,12 @@ def process():
 @app.route('/enhance', methods=["POST"])
 def enhance():
     data = request.json
-    text = "Title :" + data.get('text')
+    text = data.get('text')
     contentType = data.get('contentType')
     user_prompt = data.get('user_prompt')
 
     if contentType == "title":
+        test = 'Title' + text
         template = """
         I will provide a YouTube video title.
         Your task is to enhance it based on the given context and current YouTube trends.
@@ -257,6 +131,7 @@ def enhance():
 
         \nUSER: 
         """ + user_prompt
+
     elif contentType == "description":
         template = """
         I will provide a YouTube video description.
@@ -268,6 +143,19 @@ def enhance():
 
         \nUSER: 
         """ + user_prompt
+
+    elif contentType == "tags":
+        template = """
+            I will provide a YouTube tags or I'll ask you to generate newly.
+            Your task is to enhance it based on the given context and current YouTube trends.
+            Ensure the tags generated are individual words and maintain the context of the video.
+            CONTEXT: \n{context}\n
+
+            ENHANCED TAGS:
+
+            \nUSER: 
+            """ + user_prompt
+
     else:
         return jsonify({"error": "Invalid choice. Must be 'title' or 'description'."}), 400
 
