@@ -47,7 +47,7 @@ Extension:
 
 ## Version History
 * 0.5
-    * Prototype Release
+    * Prototype Release 6/12
 
 ## License
 
