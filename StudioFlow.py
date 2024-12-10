@@ -164,6 +164,40 @@ def enhance():
     return jsonify({'result': regen}), 201
 
 
+@app.route('/comments', methods=["POST"])
+def comments():
+    data = request.json
+    cmnt = data.get('cmnt')
+    action = data.get('action')
+
+    if action == "summarize":
+        template = """
+        I will provide you with comments from a youtube video. Your job is to summarize them briefly.
+        Try not to lose the intricate meaning of each comment.
+        
+        COMMENTS: \n{context}\n
+        
+        SUMMARY:
+        """
+
+    elif action == "reply":
+        template = """
+        Here is a comment from a youtube video. Reply to it in the same manner as the commentor and try
+        to do it in a humanly way as possible.
+        
+        COMMENT: \n{context}\n
+        
+        REPLY:
+        """
+
+    else:
+        return jsonify({"error": "Action call invalid. Must be 'summarize' or 'reply'."}), 400
+
+    response = generate(cmnt, template)
+
+    return jsonify({'response': response}), 201
+
+
 @app.route('/check', methods=["GET"])
 def check():
     youtube_url = request.args.get('url')
