@@ -31,7 +31,7 @@ StudioFlow provides a hassle-free YouTubing experience by providing industry-tre
 
 ### Installation
 
-* StudioFlow chrome extension
+* [StudioFlow Chrome Extension](https://chromewebstore.google.com/detail/studioflow/ejfgbojlgbkllakhnhhldmpejcblbdgc)
 
 
 
